@@ -26,7 +26,7 @@ Este projeto utiliza um ESP32 para conectar-se a uma rede Wi-Fi e enviar dados s
 1. Clone este repositório:
 
    ```bash
-   git clone https://github.com/seu-usuario/seu-repo.git
+   git clone https://github.com/ntncaue/fma-iot.git
 
    ```
 
