@@ -55,7 +55,7 @@ Este projeto propõe uma solução para monitorar em tempo real a localização 
 1. **Clone este repositório**:
 
    ```bash
-   git clone https://github.com/seu-usuario/seu-repo.git
+   git clone https://github.com/ntncaue/fma-iot.git
 
    Abra o projeto no VSCode com PlatformIO instalado:
 
