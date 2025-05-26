@@ -59,14 +59,14 @@ Este projeto propõe uma solução para monitorar em tempo real a localização 
    ```
 
 2. **Abra o projeto no VSCode com PlatformIO instalado**:
-   Vá em File > Open Folder e selecione a pasta do projeto.
+   -Vá em File > Open Folder e selecione a pasta do projeto.
 
-3.**Compile o projeto**:
+3. **Compile o projeto**:
 
-   No menu lateral do PlatformIO, clique em ✅ “Build” para compilar o código.
+   -No menu lateral do PlatformIO, clique em ✅ “Build” para compilar o código.
 
-4.**Executar a simulação ou gravar no ESP32**:
+4. **Executar a simulação ou gravar no ESP32**:
 
-   Se estiver simulando no Wokwi, execute o projeto por lá.
+   -Se estiver simulando no Wokwi, execute o projeto por lá.
 
    Se estiver usando ESP32 real, conecte-o via USB e clique em “Upload”.
