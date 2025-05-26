@@ -1,12 +1,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <TinyGPS++.h>
+#include <HardwareSerial.h>
 
 #define boardLED 2
-
-// Identificadores
-const char *ID = "moto123";
-const char *moduleID = "ESP32_LOC";
 
 // Wi-Fi
 const char *SSID = "Wokwi-GUEST";
@@ -20,13 +18,18 @@ const char *mqttPassword = "admin_fiap123";
 
 #define TOPICO_PUBLISH "patio/motos"
 
+// MQTT / WiFi
 WiFiClient espClient;
 PubSubClient MQTT(espClient);
 char buffer[256];
 
+// GPS (via Serial2: RX=16, TX=17)
+TinyGPSPlus gps;
+HardwareSerial SerialGPS(2);
+
 void initWiFi()
 {
-  WiFi.begin((char *)SSID, PASSWORD);
+  WiFi.begin(SSID, PASSWORD);
   Serial.print("Conectando ao Wi-Fi");
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -38,22 +41,13 @@ void initWiFi()
   Serial.println(WiFi.localIP());
 }
 
-void reconectaWiFi()
-{
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.println("Reconectando Wi-Fi...");
-    initWiFi();
-  }
-}
-
 void initMQTT()
 {
   MQTT.setServer(BROKER_MQTT, BROKER_PORT);
   while (!MQTT.connected())
   {
     Serial.println("Conectando ao Broker MQTT...");
-    if (MQTT.connect(moduleID, mqttUser, mqttPassword))
+    if (MQTT.connect("ESP32", mqttUser, mqttPassword))
     {
       Serial.println("Conectado ao Broker!");
     }
@@ -68,32 +62,34 @@ void initMQTT()
 
 void verificaConexoesWiFiEMQTT()
 {
-  reconectaWiFi();
+  if (WiFi.status() != WL_CONNECTED)
+    initWiFi();
   if (!MQTT.connected())
-  {
     initMQTT();
-  }
   MQTT.loop();
 }
 
 void publicaLocalizacao()
 {
-  StaticJsonDocument<256> doc;
+  while (SerialGPS.available() > 0)
+    gps.encode(SerialGPS.read());
 
-  doc["id"] = ID;
-  doc["Modulo"] = moduleID;
+  if (gps.location.isValid())
+  {
+    StaticJsonDocument<128> doc;
+    doc["lat"] = gps.location.lat();
+    doc["lng"] = gps.location.lng();
 
-  float latitude = -23.5505 + random(-100, 100) / 10000.0; // variação de até ±0.01
-  float longitude = -46.6333 + random(-100, 100) / 10000.0;
+    serializeJson(doc, buffer);
+    MQTT.publish(TOPICO_PUBLISH, buffer);
 
-  doc["lat"] = latitude;
-  doc["lng"] = longitude;
-
-  serializeJson(doc, buffer);
-  MQTT.publish(TOPICO_PUBLISH, buffer);
-
-  Serial.println("Localização publicada:");
-  Serial.println(buffer);
+    Serial.println("Localização publicada:");
+    Serial.println(buffer);
+  }
+  else
+  {
+    Serial.println("Aguardando dados válidos do GPS...");
+  }
 }
 
 void piscaLed()
@@ -111,14 +107,14 @@ void setup()
 
   initWiFi();
   initMQTT();
+
+  SerialGPS.begin(9600, SERIAL_8N1, 16, 17); // RX=16, TX=17 (ajuste conforme seu circuito real)
 }
 
 void loop()
 {
   verificaConexoesWiFiEMQTT();
-
   publicaLocalizacao();
   piscaLed();
-
   delay(10000);
 }
