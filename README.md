@@ -56,12 +56,6 @@ Este projeto propõe uma solução para monitorar em tempo real a localização 
 
    ```bash
    git clone https://github.com/ntncaue/fma-iot.git
-<<<<<<< HEAD
-
-   Abra o projeto no VSCode com PlatformIO instalado:
-=======
->>>>>>> eefe34681120d936c68c6c05c8bf17829d45c881
-
    ```
 
 2. **Abra o projeto no VSCode com PlatformIO instalado**:
@@ -69,10 +63,10 @@ Este projeto propõe uma solução para monitorar em tempo real a localização 
 
 3.**Compile o projeto**:
 
-No menu lateral do PlatformIO, clique em ✅ “Build” para compilar o código.
+   No menu lateral do PlatformIO, clique em ✅ “Build” para compilar o código.
 
 4.**Executar a simulação ou gravar no ESP32**:
 
-Se estiver simulando no Wokwi, execute o projeto por lá.
+   Se estiver simulando no Wokwi, execute o projeto por lá.
 
-Se estiver usando ESP32 real, conecte-o via USB e clique em “Upload”.
+   Se estiver usando ESP32 real, conecte-o via USB e clique em “Upload”.
