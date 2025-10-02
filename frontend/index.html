@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMA-IoT Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #1c1e21;
+            text-align: center;
+        }
+        #dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .moto-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        .moto-card:hover {
+            transform: translateY(-5px);
+        }
+        .moto-card h2 {
+            margin-top: 0;
+            color: #0d6efd;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .moto-card p {
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+        .moto-card .label {
+            font-weight: 600;
+        }
+        .status-estacionada { color: #198754; }
+        .status-em_movimento { color: #ffc107; }
+        .status-manutencao { color: #dc3545; }
+        #error-message {
+            display: none;
+            text-align: center;
+            background-color: #ffdddd;
+            color: #d8000c;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard de Monitoramento de Motos</h1>
+    <div id="error-message"></div>
+    <div id="dashboard"></div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/telemetry';
+        const dashboard = document.getElementById('dashboard');
+        const errorMessage = document.getElementById('error-message');
+
+        async function fetchTelemetry() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                updateDashboard(data);
+                errorMessage.style.display = 'none';
+            } catch (error) {
+                console.error("Falha ao buscar dados da API:", error);
+                errorMessage.textContent = 'Não foi possível conectar ao backend. Verifique se ele está rodando na porta 8000.';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        function updateDashboard(telemetryData) {
+            // Limpa o dashboard para evitar duplicatas
+            dashboard.innerHTML = '';
+
+            if (telemetryData.length === 0) {
+                dashboard.innerHTML = '<p>Aguardando dados de telemetria...</p>';
+                return;
+            }
+
+            telemetryData.forEach(moto => {
+                const card = document.createElement('div');
+                card.className = 'moto-card';
+
+                const statusClass = `status-${moto.status.toLowerCase().replace(' ', '_')}`;
+
+                card.innerHTML = `
+                    <h2>${moto.motorcycle_id}</h2>
+                    <p><span class="label">Status:</span> <span class="${statusClass}">${moto.status}</span></p>
+                    <p><span class="label">Latitude:</span> ${moto.lat.toFixed(6)}</p>
+                    <p><span class="label">Longitude:</span> ${moto.lng.toFixed(6)}</p>
+                    <p><span class="label">Última Atualização:</span> ${new Date(moto.timestamp).toLocaleString('pt-BR')}</p>
+                `;
+                dashboard.appendChild(card);
+            });
+        }
+
+        // Busca os dados a cada 5 segundos
+        setInterval(fetchTelemetry, 5000);
+
+        // Busca inicial ao carregar a página
+        fetchTelemetry();
+    </script>
+</body>
+</html>
