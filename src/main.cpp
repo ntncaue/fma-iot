@@ -44,8 +44,7 @@ void initWiFi() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("
-Wi-Fi conectado!");
+  Serial.println("\nWi-Fi conectado!");
   Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 }

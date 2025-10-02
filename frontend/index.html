@@ -88,7 +88,6 @@
         }
 
         function updateDashboard(telemetryData) {
-            // Limpa o dashboard para evitar duplicatas
             dashboard.innerHTML = '';
 
             if (telemetryData.length === 0) {
@@ -113,10 +112,8 @@
             });
         }
 
-        // Busca os dados a cada 5 segundos
         setInterval(fetchTelemetry, 5000);
 
-        // Busca inicial ao carregar a página
         fetchTelemetry();
     </script>
 </body>

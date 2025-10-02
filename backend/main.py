@@ -1,4 +1,3 @@
-
 import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,19 +5,16 @@ from pydantic import BaseModel
 import paho.mqtt.client as mqtt
 import json
 import threading
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, func
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-from sqlalchemy.sql import func
 
-# --- Configurações ---
 DATABASE_URL = "sqlite:///./database.db"
 BROKER_MQTT = "broker.hivemq.com"
 BROKER_PORT = 1883
 TOPICO_MQTT = "fma/patio/motos"
 
-# --- Banco de Dados (SQLAlchemy) ---
 Base = declarative_base()
 
 class Telemetry(Base):
@@ -41,7 +37,6 @@ def get_db():
     finally:
         db.close()
 
-# --- Modelo Pydantic para a API ---
 class TelemetryData(BaseModel):
     motorcycle_id: str
     lat: float
@@ -52,7 +47,6 @@ class TelemetryData(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Cliente MQTT ---
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("Conectado ao Broker MQTT!")
@@ -85,14 +79,8 @@ def run_mqtt_client():
     client.connect(BROKER_MQTT, BROKER_PORT, 60)
     client.loop_forever()
 
-# --- FastAPI App ---
-app = FastAPI(
-    title="FMA-IoT Backend",
-    description="API para monitoramento de motos",
-    version="1.0.0"
-)
+app = FastAPI()
 
-# CORS para permitir que o frontend acesse a API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -103,23 +91,17 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    # Inicia o cliente MQTT em uma thread separada
     mqtt_thread = threading.Thread(target=run_mqtt_client)
     mqtt_thread.daemon = True
     mqtt_thread.start()
 
 @app.get("/api/telemetry", response_model=list[TelemetryData])
 def get_latest_telemetry(db: Session = Depends(get_db)):
-    """
-    Retorna os últimos 10 registros de telemetria de cada moto.
-    """
-    # Subquery para encontrar o ID mais recente para cada moto
     subquery = db.query(
         Telemetry.motorcycle_id,
         func.max(Telemetry.id).label('max_id')
     ).group_by(Telemetry.motorcycle_id).subquery('latest_ids')
 
-    # Query principal para buscar os registros completos
     latest_telemetry = db.query(Telemetry).join(
         subquery,
         Telemetry.id == subquery.c.max_id
